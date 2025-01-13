@@ -1,6 +1,7 @@
+
 import Router from "@koa/router";
 import { Status, StatusPayload } from "../../api/index";
-import { hasReachedThreshold } from "../services/bucket";
+import { extract, hasReachedThreshold } from "../services/bucket";
 import { getRecipient } from "../services/user";
 import { AuthenticatedContext } from "../types/session";
 import { authMiddleware } from "./auth";
@@ -18,6 +19,7 @@ router.use(authMiddleware());
  * - DONE: destinatario già estratto
  * - 401 UNAUTHORIZED: sessione scaduta, vai a login
  */
+
 router.get("/status", async (ctx) => {
   let status: Status;
   if (await !hasReachedThreshold()) {
@@ -33,6 +35,29 @@ router.get("/status", async (ctx) => {
   }
 
   ctx.body = { status } as StatusPayload;
+});
+
+router.post("/extract", async (ctx) => {
+  const recipient = await extract(ctx.session.user._id);
+
+  if (!recipient) {
+    ctx.status = 400;
+    return (ctx.body = { error: "Non è possibile estrarre il destinatario" });
+  }
+
+  ctx.body = recipient;
+  console.log(recipient)
+});
+
+router.get("/recipient", async (ctx) => {
+  const recipient = await getRecipient(ctx.session.user._id);
+
+  if (!recipient) {
+    ctx.status = 400;
+    return (ctx.body = { error: "Non hai estratto un destinatario" });
+};
+
+ctx.body = recipient;
 });
 
 export default router;

@@ -1,17 +1,38 @@
 import { Box, Stack, Typography } from "@mui/joy";
 import { useCurrentUser } from "../../lib/useCurrentUser";
-import { TaskBox } from "../TaskBox";
-// import { useEffect, useState } from "react";
-// import { User } from "../../../../api";
-// import { config } from "../../config";
-// import { useFetch } from "../../lib/useFetch";
+import { useEffect, useState } from "react";
+import { config } from "../../config";
+import { User } from "../../../../api";
+import { useFetch } from "../../lib/useFetch";
 
 // TODO Task 2 - implementa la chiamata api per recuperare il destinatario del regalo
+
 
 export const Done: React.FC = () => {
   const currentUser = useCurrentUser();
 
-  // const fetch = useFetch();
+  const [recipient, setRecipient] = useState<User | null>();
+  const [error, setError] = useState(Boolean);
+
+  const fetch = useFetch();
+
+  useEffect(() => {
+    const fetchRecipient = async () => {
+      const response = await fetch(`${config.API_BASEPATH}/api/recipient`);
+
+      if (response?.ok) {
+        const recipient = await response.json();
+        setRecipient(recipient);
+      } else {
+        setError(true);
+      }
+  };
+  fetchRecipient();
+  }, []);
+
+  if (error) {
+    return "Mi dispiace, tutti i destinatari sono stati stati estratti";
+  }
 
   return (
     <Stack
@@ -29,17 +50,9 @@ export const Done: React.FC = () => {
       </Box>
       <Box>
         <Typography level="h2" sx={{ fontSize: "2em", mt: 5 }}>
-          {/** Metti qui il nome e cognome del destinatario */}
+          {recipient?.first_name} {recipient?.last_name}
         </Typography>
       </Box>
-
-      {/** ...e poi cancella questo messaggio */}
-      <TaskBox>
-        ... ops, non lo sappiamo!
-        <br />
-        Devi implementare una funzione che mi permetta di conoscere il
-        destinatario del regalo!
-      </TaskBox>
     </Stack>
   );
 };
